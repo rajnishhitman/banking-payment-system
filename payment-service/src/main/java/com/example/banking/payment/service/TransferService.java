@@ -11,12 +11,13 @@ import java.util.UUID;
 @Service
 public class TransferService {
     private final PaymentRepository payments;
-    private final RestClient accountClient;
+    private final AccountServiceClient accountServiceClient;
     private final RestClient notificationClient;
 
-    public TransferService(PaymentRepository payments, RestClient.Builder builder) {
+    public TransferService(PaymentRepository payments, RestClient.Builder builder
+        , AccountServiceClient accountServiceClient) {
         this.payments = payments;
-        this.accountClient = builder.baseUrl("http://localhost:8081").build();
+        this.accountServiceClient = accountServiceClient;
         this.notificationClient = builder.baseUrl("http://localhost:8083").build();
     }
 
@@ -27,15 +28,18 @@ public class TransferService {
         boolean debited = false;
 
         try {
-            accountClient.post().uri("/api/accounts/{id}/debit", request.fromAccountId())
-                    .body(new AccountOperationRequest(paymentId + "-DEBIT", request.amount()))
-                    .retrieve().toBodilessEntity();
+            accountServiceClient.debit(request.fromAccountId()
+                , new AccountOperationRequest(paymentId + "-DEBIT", request.amount()));
+//            accountClient.post().uri("/api/accounts/{id}/debit", request.fromAccountId())
+//                    .body(new AccountOperationRequest(paymentId + "-DEBIT", request.amount()))
+//                    .retrieve().toBodilessEntity();
             debited = true;
 
-            accountClient.post().uri("/api/accounts/{id}/credit", request.toAccountId())
-                    .body(new AccountOperationRequest(paymentId + "-CREDIT", request.amount()))
-                    .retrieve().toBodilessEntity();
-
+            accountServiceClient.credit(request.toAccountId()
+                , new AccountOperationRequest(paymentId + "-CREDIT", request.amount()));
+//            accountClient.post().uri("/api/accounts/{id}/credit", request.toAccountId())
+//                    .body(new AccountOperationRequest(paymentId + "-CREDIT", request.amount()))
+//                    .retrieve().toBodilessEntity();
             payment.setStatus("COMPLETED");
             try {
                 notificationClient.post().uri("/api/notifications")
@@ -49,9 +53,11 @@ public class TransferService {
             payment.setFailureReason(exception.getMessage() == null ? "Transfer failed" : exception.getMessage());
             if (debited) {
                 try {
-                    accountClient.post().uri("/api/accounts/{id}/refund", request.fromAccountId())
-                            .body(new AccountOperationRequest(paymentId + "-REFUND", request.amount()))
-                            .retrieve().toBodilessEntity();
+                    accountServiceClient.refund(request.fromAccountId()
+                        , new AccountOperationRequest(paymentId + "-REFUND", request.amount()));
+//                    accountClient.post().uri("/api/accounts/{id}/refund", request.fromAccountId())
+//                            .body(new AccountOperationRequest(paymentId + "-REFUND", request.amount()))
+//                            .retrieve().toBodilessEntity();
                     payment.setStatus("FAILED_REFUNDED");
                 } catch (Exception refundException) {
                     payment.setStatus("PENDING_RECONCILIATION");

@@ -1,5 +1,6 @@
 package com.example.banking.payment.service;
 
+import com.example.banking.payment.dto.PaymentDtos.TransferRequest;
 import com.example.banking.payment.dto.PaymentDtos.PaymentResponse;
 import com.example.banking.payment.entity.Payment;
 import com.example.banking.payment.repository.PaymentRepository;
@@ -19,7 +20,7 @@ public class PaymentService {
         this.transferService = transferService;
     }
 
-    public PaymentResponse transfer(com.example.banking.payment.dto.PaymentDtos.TransferRequest request) {
+    public PaymentResponse transfer(TransferRequest request) {
         if (request.fromAccountId().equals(request.toAccountId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Source and destination accounts must be different");
