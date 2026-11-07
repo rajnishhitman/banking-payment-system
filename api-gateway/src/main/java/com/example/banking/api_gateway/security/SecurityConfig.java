@@ -1,5 +1,6 @@
 package com.example.banking.api_gateway.security;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -22,6 +23,7 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import reactor.core.publisher.Mono;
 
 @Configuration
+@EnableConfigurationProperties(RefreshTokenProperties.class)
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
@@ -35,7 +37,7 @@ public class SecurityConfig {
             .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
             .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
             .authorizeExchange(exchange -> exchange
-                .pathMatchers("/auth/login").permitAll()
+                .pathMatchers("/auth/login", "/auth/refresh").permitAll()
                 .pathMatchers("/actuator/health").permitAll()
                 .pathMatchers("/api/admin/**").hasRole("ADMIN")
                 .pathMatchers("/api/accounts/**").hasAnyRole("USER", "ADMIN")
