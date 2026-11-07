@@ -49,3 +49,6 @@ security:
   jwt:
     secret: ${JWT_SECRET}
     expiration-seconds: 900
+
+  refresh-token:
+    expiration-seconds: 604800
